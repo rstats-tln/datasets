@@ -4,6 +4,7 @@ library(rvest)
 library(crul)
 library(stringr)
 library(lubridate)
+library(here)
 
 maaamet_query <- function(start, end, by = c('month', 'day'), aru = "T13", ehak = "EEMK") {
   by <- match.arg(by)
@@ -16,7 +17,7 @@ maaamet_query <- function(start, end, by = c('month', 'day'), aru = "T13", ehak 
   }
   url <- "http://www.maaamet.ee/kinnisvara/htraru/Start.aspx"
   x <- HttpClient$new(url = url)
-  data_frame(start, end) %>% 
+  tibble(start, end) %>% 
     mutate(resp = map2(start, end, ~x$get(query = list(aru = aru, 
                                                        ehak = ehak, 
                                                        algus = format(.x, "%d.%m.%Y"), 
@@ -24,8 +25,8 @@ maaamet_query <- function(start, end, by = c('month', 'day'), aru = "T13", ehak 
                                           timeout_ms = 10000)))
 }
 
-periods <- data_frame(start = seq(dmy('01-01-2005'), dmy('01-01-2018'), by = '2 years'),
-                      end = seq(dmy('01-12-2006'), dmy('01-12-2018'), by = '2 years'))
+periods <- data_frame(start = seq(dmy('01-01-2005'), dmy('01-01-2019'), by = '2 years'),
+                      end = seq(dmy('01-12-2006'), dmy('01-12-2020'), by = '2 years'))
 periods <- periods %>% 
   mutate(resp = map2(start, end, maaamet_query))
 
@@ -64,4 +65,4 @@ transactions <- periods_unnested %>%
   select(Kuu = start, tab) %>% 
   unnest()
 
-write_csv(transactions, "transactions_residential_apartments.csv")
+write_csv(transactions, here("transactions_residential_apartments.csv"))
